@@ -1,9 +1,13 @@
+#Program przyjmuje dane w pliku "data.txt" w pierwszej linijce znajduje się stopień wielomianu zaś w drugiej współczynniki. 
+#Dane powinny być odzielone przecinkami. Jednostka urojona powinna być zapisana jako i lub j. 
+
 import numpy as np
 from numpy.polynomial import Polynomial
 
 def reading(filename):
     with open(filename) as file:
         for index, line in enumerate(file):
+            line= line.split("#")[0]
             if index == 0:
                 degree=int(line[:-1])
             elif index==1:
@@ -29,7 +33,7 @@ def contraction(polynomial, derivative, root):
      
 
 
-def newton(coeffs, guess_num = 10, max_iter=1000, tolerance=10e-6): 
+def newton(coeffs, guess_num = 10, max_iter=100000, tolerance=10e-6): 
     degree = len(coeffs) - 1
     roots = []
     polynomial = Polynomial(coeffs)
@@ -74,6 +78,6 @@ coefficients = [complex(c) for c in coefficients]
 roots = newton(coefficients)
 
 print("miejsca zerowe wielomianu")
-print(roots)
+print(np.round(roots,2))
 if degree - len(roots) != 0:
     print( "podejrzenie", (degree - len(roots)), " pierwiastkow wielokrotnych")
