@@ -16,8 +16,8 @@ def contraction(polynomial, derivative, root):
     
     for x in np.linspace(root.real - r, root.real + r, 10):
         for y in np.linspace(root.imag - r, root.imag + r, 10):
-            z1 = complex(x, y)
-            z2 = root
+            z1 = complex(x, y)  #punkt testowy
+            z2 = root           #punkt stały
             try:
                 N_z1 = z1 - polynomial(z1) / derivative(z1)
                 N_z2 = z2 - polynomial(z2) / derivative(z2)
@@ -29,14 +29,14 @@ def contraction(polynomial, derivative, root):
      
 
 
-def gauss_zero(coeffs, guess_num = 10, max_iter=1000, tolerance=10e-6): 
+def newton(coeffs, guess_num = 10, max_iter=1000, tolerance=10e-6): 
     degree = len(coeffs) - 1
     roots = []
     polynomial = Polynomial(coeffs)
     derivative = polynomial.deriv()
     
     # Losowy wybór początkowych punktów startowych w płaszczyźnie zespolonej
-    guesses = [complex(np.random.uniform(-10, 10), np.random.uniform(-10, 10)) for _ in range(guess_num)]
+    guesses = [complex(np.random.uniform(-10, 10), np.random.uniform(-10, 10)) for _ in range(guess_num)]   #szukamy na przedziale -10 10
     
     for guess in guesses:
         x = guess
@@ -58,15 +58,12 @@ def gauss_zero(coeffs, guess_num = 10, max_iter=1000, tolerance=10e-6):
         
         # Dodaj pierwiastek do listy, jeśli nie jest zbyt blisko istniejących
         if not any(abs(x - r) < tolerance for r in roots):
-            #if zbiega to 
                 roots.append(x)
 
     
-    return roots
-##################################                      
+    return roots                     
 
-
-                    
+    
 #wczytanie danych       
 degree, coefficients = reading("data.txt")
 coefficients = [c.replace('i', 'j') for c in coefficients] 
@@ -74,9 +71,9 @@ coefficients = [complex(c) for c in coefficients]
 
 
 
-roots = gauss_zero(coefficients)
+roots = newton(coefficients)
 
 print("miejsca zerowe wielomianu")
 print(roots)
 if degree - len(roots) != 0:
-    print( "podejrzenie", (degree - len(roots)), " pierwiastkow podwojnych")
+    print( "podejrzenie", (degree - len(roots)), " pierwiastkow wielokrotnych")
