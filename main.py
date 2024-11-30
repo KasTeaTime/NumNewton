@@ -8,7 +8,6 @@ def reading(filename):
                 degree=int(line[:-1])
             elif index==1:
                     coefficients = line.split(",")
-                    print(coefficients)
     return(degree, coefficients)
     
                     
@@ -20,7 +19,9 @@ ep=0.001
 x0=5
            
 degree, coefficients = reading("data.txt")
+coefficients = [c.replace('i', 'j') for c in coefficients]
+coefficients = [complex(c) for c in coefficients]
 
 
-coefficients = complex(coefficients)
+
 print(coefficients)
