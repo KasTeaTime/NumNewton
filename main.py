@@ -1,17 +1,21 @@
-#Program przyjmuje dane w pliku "data.txt" w pierwszej linijce znajduje się stopień wielomianu zaś w drugiej współczynniki. 
-#Dane powinny być odzielone przecinkami. Jednostka urojona powinna być zapisana jako i lub j. 
+#Program przyjmuje dane z pliku przekazywanego do programu w pierwszej linijce znajduje się stopień wielomianu zaś w kolejnych współczynniki. 
+#Dane powinny być odzielone enterami
+#Jednostka urojona powinna być zapisana jako i lub j. 
 
 import numpy as np
+import sys
 from numpy.polynomial import Polynomial
 
 def reading(filename):
+    coefficients=[]
     with open(filename) as file:
         for index, line in enumerate(file):
-            line= line.split("#")[0]
+            line = line.strip() # Usunięcie białych znaków na początku i końcu linii
             if index == 0:
-                degree=int(line[:-1])
-            elif index==1:
-                    coefficients = line.split(",")
+                degree = int(line.split()[0])
+            else:
+                if line and not line.startswith("#"):   # Pomiń puste linie i komentarze
+                    coefficients.append(line)  # Zamiana tekstu na liczbę lub liczbę zespoloną
     return(degree, coefficients)
 
 def contraction(polynomial, derivative, root):
@@ -33,14 +37,14 @@ def contraction(polynomial, derivative, root):
      
 
 
-def newton(coeffs, guess_num = 10, max_iter=100000, tolerance=10e-6): 
+def newton(coeffs, guess_num = 100, max_iter=100000, tolerance=10e-6): 
     degree = len(coeffs) - 1
     roots = []
     polynomial = Polynomial(coeffs)
     derivative = polynomial.deriv()
     
     # Losowy wybór początkowych punktów startowych w płaszczyźnie zespolonej
-    guesses = [complex(np.random.uniform(-10, 10), np.random.uniform(-10, 10)) for _ in range(guess_num)]   #szukamy na przedziale -10 10
+    guesses = [complex(np.random.uniform(-50, 50), np.random.uniform(-10, 10)) for _ in range(guess_num)]   #szukamy na przedziale -50 50
     
     for guess in guesses:
         x = guess
@@ -60,6 +64,9 @@ def newton(coeffs, guess_num = 10, max_iter=100000, tolerance=10e-6):
                     break
             x = x_next
         
+        if complex(-0) in roots:
+            print("a")
+
         # Dodaj pierwiastek do listy, jeśli nie jest zbyt blisko istniejących
         if not any(abs(x - r) < tolerance for r in roots):
                 roots.append(x)
@@ -68,11 +75,18 @@ def newton(coeffs, guess_num = 10, max_iter=100000, tolerance=10e-6):
     return roots                     
 
     
-#wczytanie danych       
-degree, coefficients = reading("data.txt")
+#wczytanie danych   
+if len(sys.argv) < 2:
+    print("Podaj nazwe pliku")
+    exit()
+data = sys.argv[1]
+
+#print(open(data))
+degree, coefficients = reading(data)
+print(degree)
+print(coefficients)
 coefficients = [c.replace('i', 'j') for c in coefficients] 
 coefficients = [complex(c) for c in coefficients]
-
 
 
 roots = newton(coefficients)
