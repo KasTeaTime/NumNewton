@@ -1,4 +1,5 @@
-#Program przyjmuje dane z pliku przekazywanego do programu w pierwszej linijce znajduje się stopień wielomianu zaś w kolejnych współczynniki. 
+#Program przyjmuje dane z pliku przekazywanego do programu. 
+# W pierwszej linijce znajduje się stopień wielomianu i ewentualny komentarz zaś w kolejnych współczynniki. 
 #Dane powinny być odzielone enterami
 #Jednostka urojona powinna być zapisana jako i lub j. 
 
@@ -15,83 +16,103 @@ def reading(filename):
                 degree = int(line.split()[0])
             else:
                 if line and not line.startswith("#"):   # Pomiń puste linie i komentarze
-                    coefficients.append(line)  # Zamiana tekstu na liczbę lub liczbę zespoloną
+                    coefficients.append(line)  
     return(degree, coefficients)
 
-def contraction(polynomial, derivative, root):
-    L = 0  # Stała (musi być mniejsza od 1)
-    r = 1e-3  # Małe otoczenie wokół pierwiastka
+def contraction(polynomial, derivative, N_root):
+    L =0.1  # Stała (musi być mniejsza od 1)
+    #N_root = root - polynomial(root) / derivative(root)
+    root = N_root+ polynomial(N_root) / derivative(N_root)
     
-    for x in np.linspace(root.real - r, root.real + r, 10):
-        for y in np.linspace(root.imag - r, root.imag + r, 10):
-            z1 = complex(x, y)  #punkt testowy
-            z2 = root           #punkt stały
+    r = abs(N_root - root) / (1 - L)
+    print(N_root - root)
+
+    #if abs(r - N_root) < 10e-6:
+    #    return False
+
+    # Sprawdzenie kontrakcji w kuli o promieniu r
+    for theta in np.linspace(0, 2 * np.pi, 100):  # Kąt
+        for rad in np.linspace(0, r, 100):       # Promień
+            z = root + rad * (np.cos(theta) + 1j * np.sin(theta))
+
+            N_z = z - polynomial(z) / derivative(z)
             try:
-                N_z1 = z1 - polynomial(z1) / derivative(z1)
-                N_z2 = z2 - polynomial(z2) / derivative(z2)
-                L = max(L, abs(N_z1 - N_z2) / abs(z1 - z2))
+                # Sprawdzenie warunku |N(z) - z0| <= L |z - z0| + |N(z0) - z0|
+                if abs(N_z - root) < L * abs(z - root) + abs(N_root - root):
+                    return False
             except ZeroDivisionError:
                 continue
-
-    return L < 1
+    return True
      
 
-
-def newton(coeffs, guess_num = 100, max_iter=100000, tolerance=10e-6): 
+def newton(coeffs, guess_num = 100, max_iter=100, tolerance=10e-6): 
     degree = len(coeffs) - 1
     roots = []
     polynomial = Polynomial(coeffs)
     derivative = polynomial.deriv()
     
     # Losowy wybór początkowych punktów startowych w płaszczyźnie zespolonej
-    guesses = [complex(np.random.uniform(-50, 50), np.random.uniform(-10, 10)) for _ in range(guess_num)]   #szukamy na przedziale -50 50
-    
+    guesses = [complex(np.random.uniform(-50, 50), np.random.uniform(-50, 50)) for _ in range(guess_num)]   #szukamy na przedziale -50 50
+
     for guess in guesses:
-        x = guess
-        for _ in range(max_iter):
-            f_x = polynomial(x)
-            f_prime_x = derivative(x)
-                 
-            if abs(f_prime_x) < 1e-14: #czy moduł z liczby nie jest zbyt blisko 0 
-                print("Terrible precision ")
-            
-            x_next = x - f_x / f_prime_x
-            
-            # Sprawdzenie zbieżności
-            if abs(x_next - x) < tolerance:
-                if contraction(polynomial, derivative, x_next):
-                    x = x_next
-                    break
-            x = x_next
-        
-        if complex(-0) in roots:
-            print("a")
+        #if len(roots) < degree:
+        if True:    
+            x = guess
+            for i in range(max_iter):
+                f_x = polynomial(x)
+                f_prime_x = derivative(x)
 
-        # Dodaj pierwiastek do listy, jeśli nie jest zbyt blisko istniejących
-        if not any(abs(x - r) < tolerance for r in roots):
-                roots.append(x)
+                if abs(f_prime_x) < 1e-14: #czy moduł z liczby nie jest zbyt blisko 0 
+                    print("Terrible precision ")
+                
+                x_next = x - f_x / f_prime_x
+                
+                # Sprawdzenie zbieżności
 
-    
+                if abs(x_next - x) < tolerance:
+                    if contraction(polynomial, derivative, x_next):
+                        x = x_next
+                        break
+            # Dodaj pierwiastek do listy, jeśli nie jest zbyt blisko istniejących
+            if not any(abs(x - r) < tolerance for r in roots): 
+                roots.append(x) 
     return roots                     
 
     
 #wczytanie danych   
-if len(sys.argv) < 2:
-    print("Podaj nazwe pliku")
-    exit()
-data = sys.argv[1]
+# if len(sys.argv) < 2:
+#     print("Podaj nazwe pliku")
+#     exit()
+# data = sys.argv[1]
 
-#print(open(data))
+data = 'data.txt'
+
+def P(x):
+    return x**2 - 2
+
+def P_prime(x):
+    return 2 * x
+
+root = 1.4  # Blisko sqrt(2)
+print(contraction(P, P_prime, root))  # Oczekiwany wynik: True
+root = 10  # Daleko od sqrt(2)
+print(contraction(P, P_prime, root))  # Oczekiwany wynik: False
+
+
+
+
+
+
+
+
+
 degree, coefficients = reading(data)
-print(degree)
-print(coefficients)
 coefficients = [c.replace('i', 'j') for c in coefficients] 
 coefficients = [complex(c) for c in coefficients]
 
-
-roots = newton(coefficients)
-
-print("miejsca zerowe wielomianu")
-print(np.round(roots,2))
-if degree - len(roots) != 0:
-    print( "podejrzenie", (degree - len(roots)), " pierwiastkow wielokrotnych")
+#roots = newton(coefficients)
+# np.set_printoptions(precision=2, floatmode='fixed', linewidth=100, suppress=True) #Formatowanie wypisywania w konsoli
+# print("miejsca zerowe wielomianu")
+# print(np.round(roots,2)) 
+# if degree - len(roots) != 0:
+#     print( "podejrzenie", (degree - len(roots)), " pierwiastkow wielokrotnych")
