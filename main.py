@@ -1,5 +1,5 @@
 #Program przyjmuje dane z pliku przekazywanego do programu. 
-# W pierwszej linijce znajduje się stopień wielomianu i ewentualny komentarz zaś w kolejnych współczynniki. 
+#W pierwszej linijce znajduje się stopień wielomianu i ewentualny komentarz zaś w kolejnych współczynniki. 
 #Dane powinny być odzielone enterami
 #Jednostka urojona powinna być zapisana jako i lub j. 
 #Szukamy miejsca zerowego na przedziale -50 50
@@ -26,7 +26,7 @@ def contraction(polynomial, derivative, N_root):
     
     r = abs(N_root - root) / (1 - L)
 
-    if abs(root - N_root) < 10e-6: # Punkt początkowy jest daleko od rzeczywistego miejsca zerowego
+    if abs(root - N_root) < 10e-6: # Czy punkt początkowy jest daleko od rzeczywistego miejsca zerowego
         # Sprawdzenie kontrakcji w kuli o promieniu r
         for theta in np.linspace(0, 2 * np.pi, 100):  # Kąt
             for rad in np.linspace(0, r, 100):       # Promień
@@ -52,7 +52,7 @@ def newton(coeffs, guess_num = 1000, max_iter=100, tolerance=10e-6):
     derivative = polynomial.deriv()
     
     # Losowy wybór początkowych punktów startowych w płaszczyźnie zespolonej
-    guesses = [complex(np.random.uniform(-50, 50), np.random.uniform(-50, 50)) for _ in range(guess_num)]   #szukamy na przedziale -50 50
+    guesses = [complex(np.random.uniform(-50, 50), np.random.uniform(-50, 50)) for _ in range(guess_num)]   #Szukamy na przedziale -50 50
 
     for iter_guess, guess in enumerate(guesses):
         if len(roots) < degree:    
