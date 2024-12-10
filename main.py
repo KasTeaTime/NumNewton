@@ -25,25 +25,26 @@ def contraction(polynomial, derivative, N_root):
     
     r = abs(N_root - root) / (1 - L)
 
-    if abs(r - N_root) < 10e-6: # punkt początkowy jest daleko od rzeczywistego miejsca zerowego
+    if abs(root - N_root) < 10e-6: # punkt początkowy jest daleko od rzeczywistego miejsca zerowego
+        # Sprawdzenie kontrakcji w kuli o promieniu r
+        for theta in np.linspace(0, 2 * np.pi, 100):  # Kąt
+            for rad in np.linspace(0, r, 100):       # Promień
+                z = root + rad * (np.cos(theta) + 1j * np.sin(theta))
+
+                N_z = z - polynomial(z) / derivative(z)
+                try:
+                    # Sprawdzenie warunku |N(z) - z0| <= L |z - z0| + |N(z0) - z0|
+                    if abs(N_z - root) < L * abs(z - root) + abs(N_root - root):
+                        return False
+                    else:
+                        return True
+                except ZeroDivisionError:
+                    continue
+    else:
         return False
-
-    # Sprawdzenie kontrakcji w kuli o promieniu r
-    for theta in np.linspace(0, 2 * np.pi, 100):  # Kąt
-        for rad in np.linspace(0, r, 100):       # Promień
-            z = root + rad * (np.cos(theta) + 1j * np.sin(theta))
-
-            N_z = z - polynomial(z) / derivative(z)
-            try:
-                # Sprawdzenie warunku |N(z) - z0| <= L |z - z0| + |N(z0) - z0|
-                if abs(N_z - root) < L * abs(z - root) + abs(N_root - root):
-                    return False
-            except ZeroDivisionError:
-                continue
-    return True
      
 
-def newton(coeffs, guess_num = 100, max_iter=100, tolerance=10e-6): 
+def newton(coeffs, guess_num = 10, max_iter=100, tolerance=10e-6): 
     degree = len(coeffs) - 1
     roots = []
     polynomial = Polynomial(coeffs)
@@ -88,7 +89,7 @@ def newton(coeffs, guess_num = 100, max_iter=100, tolerance=10e-6):
 #     exit()
 # data = sys.argv[1]
 
-data = 'data2.txt'
+data = 'data.txt'
 
 def P(x):
     return x**2 - 2
