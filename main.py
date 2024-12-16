@@ -21,18 +21,19 @@ def reading(filename):
     return(degree, coefficients)
 
 def contraction(polynomial, derivative, N_root):
-    L =0.1  # Stała (musi być mniejsza od 1)
-    root = N_root+ polynomial(N_root) / derivative(N_root)
-    
-    r = abs(N_root - root) / (1 - L)
+    r =0.1 #Promień poszukiwać 
+    root = N_root+ polynomial(N_root) / derivative(N_root) #Krok obliczający kolejne przybliżenie miejsca zerowego
 
+    L=-(abs(N_root - root)/r-1) #Stała 
+
+ 
     if abs(root - N_root) < 10e-6: # Czy punkt początkowy jest daleko od rzeczywistego miejsca zerowego
         # Sprawdzenie kontrakcji w kuli o promieniu r
-        for theta in np.linspace(0, 2 * np.pi, 100):  # Kąt
-            for rad in np.linspace(0, r, 100):       # Promień
-                z = root + rad * (np.cos(theta) + 1j * np.sin(theta))
+        for theta in np.linspace(0, 2 * np.pi, 100):  # Generowanie kątów kuli dla których sprawdzamy kontrakcję
+            for rad in np.linspace(0, r, 100):       # Generowanie promieni kuli dla których sprawdzamy kontrakcję
+                z = root + rad * (np.cos(theta) + 1j * np.sin(theta)) 
 
-                N_z = z - polynomial(z) / derivative(z)
+                N_z = z - polynomial(z) / derivative(z)     #kula
                 try:
                     # Sprawdzenie warunku |N(z) - z0| <= L |z - z0| + |N(z0) - z0|
                     if abs(N_z - root) < L * abs(z - root) + abs(N_root - root):
@@ -62,8 +63,8 @@ def newton(coeffs, guess_num = 1000, max_iter=100, tolerance=10e-6):
                 f_x = polynomial(x)
                 f_prime_x = derivative(x)
 
-                if abs(f_prime_x) < 1e-14: #Czy moduł z liczby nie jest zbyt blisko 0 
-                    print("Terrible precision ")
+                if abs(f_prime_x) < 1e-15: #Czy moduł z liczby nie jest zbyt blisko 0 
+                    print("Uwaga: Pochodna dla wartości podejrzewanej o bycie miejscem zerowym jest bliska zeru, kontynuuję obliczenia")
 
                 x = x - f_x / f_prime_x
 
