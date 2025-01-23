@@ -30,7 +30,7 @@ def contraction(polynomial, point):
     
     print(p_z,dp_z,ddp_z)
 
-    if abs(dp_z) < 10e-8:     #Wykluczam pochodne bliskie 0 
+    if abs(dp_z) < 10e-18:     #Wykluczam pochodne bliskie 0 
         return False
 
     norm_D_N = abs(p_z * ddp_z) / (abs(dp_z)**2)    #||D(N(x))|| = |p(z) * p''(z) / (p'(z))^2|
@@ -45,13 +45,15 @@ def contraction(polynomial, point):
 
 
     epsilon = abs(N_y - point)  #epsilon= ||N(x) - x0||
+    print(radius,epsilon)
     if radius >= 2 * epsilon:   #Warunek na R
         return True
+    else:
+        return False
 
-    return True
 
-polynomial = [1e-14, 1e-14, 0]  # Wielomian x^2 - 3x + 2
-point = 0+ 0j  # Podejrzewany pierwiastek
+polynomial = [1.1, 2.1, 0]  # Wielomian x^2 - 3x + 2
+point = -1.90909090909+ 0j  # Podejrzewany pierwiastek
 
 if contraction(polynomial, point):
     print(f"Punkt {point} jest miejscem zerowym wielomianu.")
