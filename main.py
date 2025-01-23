@@ -20,52 +20,70 @@ def reading(filename):
                     coefficients.append(line)  
     return(degree, coefficients)
 
-def contraction(polynomial, x0):
-    radius = 0.5  # Promień większej kuli w obrębie którego sprawdzamy kontrakcję
-    resolution = 1000 #Liczba punktów w kuli
+def contraction(polynomial, point):
+    # if point==0j:
+    #     point= 0+0j
 
-    derivative = polynomial.deriv()           # Wyznaczenie pochodnej i drugiej pochodnej wielomianu
-    derivative2 = derivative.deriv()
+    #Obliczenie wartości wielomianu i jego pochodnych w punkcie
+    def p(z):
+        sum=0
+        for i, a in enumerate(reversed(polynomial)):    #a to współczynniki wielomianu
+            sum = sum + a * z**i
+        return sum
 
-    print(derivative,"klu", derivative2)
+    def dp(z):
+        sum=0
+        for i, a in enumerate(reversed(polynomial)):
+            if i > 0:
+                sum = sum +i * a * z**(i-1)
+        return sum
 
-    def N(x):       #Krok metody Newtona
-        return x - polynomial(x) / derivative(x)
-
-    def derivative_N(x):    #Wyznaczenie pochodnej N(x)
-        return 1 - (derivative(x)**2 - polynomial(x) * derivative2(x)) / (derivative(x)**2)      
-
-    x_values = np.linspace(x0 - radius, x0 + radius, resolution)        #Dyskretyzacja większej kuli
-    epsilon = 0     #Wartości startowe
-    L = 0
-
-    for x in x_values:  #Dla każdego punktu na kuli bierzemy maksymalną wartość L i epsilon
-        if(abs(derivative_N(x)) > L ):  # L=||dN(x)/dx||
-            L = abs(derivative_N(x))
-
-        if(abs(N(x) - x0)> epsilon ):   #epsilon= ||N(x) - x0||
-            epsilon = abs(N(x) - x0)    #maksymalna odległość N(x) od podejrzanego miejsca zerowego x0  w całej kuli
-
-    if L >= 1:          #Warunek L < 1
+    def ddp(z):
+        sum=0
+        for i, a in enumerate(reversed(polynomial)):
+            if i > 1:
+                sum=sum + i * (i-1) * a * z**(i-2) 
+        return sum
+    
+    #Obliczenia wartości wielomianu i jego pochodnych w punkcie podejrzanym o bycie miejscem zerowym
+    p_z = p(point)
+    dp_z = dp(point)
+    ddp_z = ddp(point)
+    
+    if abs(dp_z) < 10e-6:     #Wykluczam pochodne bliskie 0 
         return False
 
-    for x in x_values:    #Sprawdzanie warunku kontrakcji: |N(x) - x0| <= L |x - x0| + epsilon ; na podstawie wzoru 51 i 34 (R = epsilon/(1-L)) z wykładu
-        if abs(N(x) - x0) > L * abs(x - x0) + epsilon:
-            return False    
+    norm_D_N = abs(p_z * ddp_z) / (abs(dp_z)**2)    #||D(N(x))|| = |p(z) * p''(z) / (p'(z))^2|
+    
+    if norm_D_N >= 1:       # Warunek ||D(N(x))|| < 1   (L<1)
+        return False
 
-    return True
+    N_y = point - p_z / dp_z    #Krok metody Newtona N(y) = y - p(y)/p'(y)
+    radius = abs(N_y - point) / (1 - norm_D_N)      # Obliczanie promienia R = ||N(y) - y|| / (1 - L)
+
+#########################SPR CZY DZIAŁA
+    if p(point) < 1e-6:
+        print("to jest pierwiastek",point, "miau")
+    else:
+        print("to nie jest pierwiastek",point)            
+##########################################
+    
+    epsilon = abs(N_y - point)  #epsilon= ||N(x) - x0||
+    if radius >= 2 * epsilon:   #Warunek na R
+        return True
+    else:
+        return False
      
 
-def newton(coeffs, guess_num = 100, max_iter=100, tolerance=10e-6): 
+def newton(coeffs, guess_num = 10, max_iter=100, tolerance=10e-6): 
     degree = len(coeffs) - 1
     roots = []
     polynomial = Polynomial(coeffs)
     derivative = polynomial.deriv()
-
+    print(polynomial)
     
     # Losowy wybór początkowych punktów startowych w płaszczyźnie zespolonej
-    # guesses = [complex(np.random.uniform(-10, 10), np.random.uniform(-10, 10)) for _ in range(guess_num)]   #Szukamy na przedziale -50 50
-    guesses=[complex(1,0)]
+    guesses = [complex(np.random.uniform(-50, 50), np.random.uniform(-50, 50)) for _ in range(guess_num)]   #Szukamy na przedziale -50 50
 
     for iter_guess, guess in enumerate(guesses):
         if len(roots) < degree:    
@@ -82,19 +100,20 @@ def newton(coeffs, guess_num = 100, max_iter=100, tolerance=10e-6):
                 x = x - f_x / f_prime_x
 
 
-            if contraction(polynomial, x):
+            if contraction(coeffs, x):
                 if not any(abs(x - r) < tolerance for r in roots): # Dodaj pierwiastek do listy, jeśli nie jest zbyt blisko istniejących
                     roots.append(x)
     return roots                     
 
     
-#wczytanie danych   
-# if len(sys.argv) < 2:
-#     print("Podaj nazwe pliku")
-#     exit()
-# data = sys.argv[1]
+# wczytanie danych   
 
-data="data3.txt"
+if len(sys.argv) < 2:
+    print("Podaj nazwe pliku")
+    exit()
+data = sys.argv[1]
+
+# data="data2.txt"
 
 degree, coefficients = reading(data)
 coefficients = [c.replace('i', 'j') for c in coefficients] 

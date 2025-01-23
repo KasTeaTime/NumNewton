@@ -1,44 +1,62 @@
 import numpy as np
 
-def contraction(polynomial, x0):
-    radius = 0.05  # Promień większej kuli w obrębie którego sprawdzamy kontrakcję
-    resolution = 1000 #Liczba punktów w kuli
+def is_zero_by_contraction(polynomial, point, epsilon=1e-6):
+    """
+    Sprawdza, czy dany punkt jest miejscem zerowym wielomianu za pomocą kontrakcji.
+    
+    Args:
+        polynomial (list): Współczynniki wielomianu [a_n, a_{n-1}, ..., a_0].
+        point (complex): Punkt podejrzewany o bycie miejscem zerowym.
+        epsilon (float): Tolerancja dla warunków kontrakcji.
+    
+    Returns:
+        bool: True, jeśli punkt spełnia warunki kontrakcji, False w przeciwnym razie.
+    """
+    # Funkcje pomocnicze do obliczania wartości wielomianu i jego pochodnych
+    def p(z):
+        """Oblicza wartość wielomianu w punkcie z."""
+        return sum(a * z**i for i, a in enumerate(reversed(polynomial)))
 
-    derivative = polynomial.deriv()           # Wyznaczenie pochodnej i drugiej pochodnej wielomianu
-    derivative2 = derivative.deriv()
+    def dp(z):
+        """Oblicza wartość pierwszej pochodnej wielomianu w punkcie z."""
+        return sum(i * a * z**(i-1) for i, a in enumerate(reversed(polynomial)) if i > 0)
 
-    def N(x):       #Krok metody Newtona
-        return x - polynomial(x) / derivative(x)
+    def ddp(z):
+        """Oblicza wartość drugiej pochodnej wielomianu w punkcie z."""
+        return sum(i * (i-1) * a * z**(i-2) for i, a in enumerate(reversed(polynomial)) if i > 1)
 
-    def derivative_N(x):    #Wyznaczenie pochodnej N(x)
-        return 1 - (derivative(x)**2 - polynomial(x) * derivative2(x)) / (derivative(x)**2)      
+    # Obliczenia wartości wielomianu i jego pochodnych w punkcie
+    p_z = p(point)  # Wartość wielomianu w punkcie
+    dp_z = dp(point)  # Wartość pierwszej pochodnej w punkcie
+    ddp_z = ddp(point)  # Wartość drugiej pochodnej w punkcie
 
-    x_values = np.linspace(x0 - radius, x0 + radius, resolution)        #Dyskretyzacja większej kuli
-    epsilon = 0     #Wartości startowe
-    L = 0
+    # Obliczanie normy ||D(N(x))|| = |p(z) * p''(z) / (p'(z))^2|
+    try:
+        norm_D_N = abs(p_z * ddp_z) / (abs(dp_z)**2)
+    except ZeroDivisionError:
+        return False  # Jeśli p'(z) = 0, kontrakcja nie działa
 
-    for x in x_values:  #Dla każdego punktu na kuli bierzemy maksymalną wartość L i epsilon
-        if(abs(derivative_N(x)) > L ):  # L=||dN(x)/dx||
-            L = abs(derivative_N(x))
-
-        if(abs(N(x) - x0)> epsilon ):   #epsilon= ||N(x) - x0||
-            epsilon = abs(N(x) - x0)    #maksymalna odległość N(x) od podejrzanego miejsca zerowego x0  w całej kuli
-
-    if L >= 1:          #Warunek L < 1
+    print(norm_D_N)
+    # Warunek kontrakcji: ||D(N(x))|| musi być mniejsze od 1
+    if norm_D_N >= 1:
         return False
 
-    for x in x_values:    #Sprawdzanie warunku kontrakcji: |N(x) - x0| <= L |x - x0| + epsilon ; na podstawie wzoru 51 i 34 (R = epsilon/(1-L)) z wykładu
-        if abs(N(x) - x0) > L * abs(x - x0) + epsilon:
-            return False    
+    # Obliczanie promienia kontrakcji R = ||N(y) - y|| / (1 - ||D(N(x))||)
+    # Operator Newtona: N(y) = y - p(y)/p'(y)
+    N_y = point - p_z / dp_z  # Nowa iteracja Newtona
+    diff = abs(N_y - point)  # Odległość między kolejną iteracją a punktem początkowym
+    radius = diff / (1 - norm_D_N)  # Promień kontrakcji
 
+    # Sprawdzenie, czy promień kontrakcji R spełnia warunek
+    if radius >= 2 * epsilon:
+        return False
+
+    # Jeśli wszystkie warunki są spełnione, uznajemy punkt za miejsce zerowe
     return True
 
 
+polynomial = [2.1, 1.1, 0]  # Wielomian 2.1z^2 + 1.1z
+point = -1.90909 + 0j  # Punkt podejrzewany o bycie miejscem zerowym
 
-# Przykład użycia
-poly = np.poly1d([1e-14, 1e-14, 0])  # Wielomian f(x) = x^2 - 0
-x0 = 0.01+0j # Podejrzane miejsce zerowe
-
-
-is_contraction= contraction(poly, x0)
-print(f"Czy funkcja iteracyjna jest kontrakcją w kuli? {is_contraction}")
+result = is_zero_by_contraction(polynomial, point)
+print(result)  # Powinno zwrócić True
