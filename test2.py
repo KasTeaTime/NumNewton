@@ -44,16 +44,14 @@ def contraction(polynomial, point):
     radius = abs(N_y - point) / (1 - norm_D_N)      # Obliczanie promienia R = ||N(y) - y|| / (1 - L)
 
 
-    
     epsilon = abs(N_y - point)  #epsilon= ||N(x) - x0||
     if radius >= 2 * epsilon:   #Warunek na R
         return True
-    else:
-        return False
 
+    return True
 
 polynomial = [1e-14, 1e-14, 0]  # Wielomian x^2 - 3x + 2
-point = -1+ 0j  # Podejrzewany pierwiastek
+point = 0+ 0j  # Podejrzewany pierwiastek
 
 if contraction(polynomial, point):
     print(f"Punkt {point} jest miejscem zerowym wielomianu.")
