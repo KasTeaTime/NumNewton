@@ -50,7 +50,7 @@ def contraction(polynomial, point):
     dp_z = dp(point)
     ddp_z = ddp(point)
     
-    if abs(dp_z) < 10e-18:     #Wykluczam pochodne bliskie 0 
+    if abs(dp_z) < 10e-16:     #Wykluczam pochodne bliskie 0 
         return False
 
     norm_D_N = abs(p_z * ddp_z) / (abs(dp_z)**2)    #||D(N(x))|| = |p(z) * p''(z) / (p'(z))^2|
